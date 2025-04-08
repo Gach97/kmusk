@@ -5,9 +5,9 @@ const fs = require('fs');
 
 async function fetchAsset() {
   try {
-    const response = await axios.get('https://api.coincap.io/v2/assets',{
+    const response = await axios.get('https://rest.coincap.io/v3/assets',{
       headers: {
-       'Authorization': `Bearer 6afe6c0b-fbce-41e8-a9fa-3e2a42a804c7`
+       'Authorization': `Bearer ae7fca532508d4930d79ed8300b7c7d2ef02648c7ec0033a8681dc1669e88af7`
       }
     });
     const assets = response.data.data;
