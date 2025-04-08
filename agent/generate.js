@@ -12,6 +12,7 @@ function getRandom(arr) {
 
 const getData = async (asset) => {
   try {
+    console.log('Getting asset data');
     const res = await axios.get(`https://api.coincap.io/v2/assets/${asset}/history?interval=h6`)
     return res.data;
   } catch (e) {
