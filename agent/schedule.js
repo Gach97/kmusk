@@ -26,7 +26,7 @@ async function fetchAsset() {
 
     // Select a random asset from the top 5
     const randomAsset = topVolatileAssets[Math.floor(Math.random() * topVolatileAssets.length)];
-
+console.log('asset found:' randomAsset.id)
     return randomAsset.id;
 
   } catch (error) {
