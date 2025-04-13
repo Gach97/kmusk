@@ -12,15 +12,14 @@ function getRandom(arr) {
 
 const getData = async (asset) => {
   try {
-    console.log('Getting asset data');
-    const res = await axios.get('https://rest.coincap.io/v3/assets/${asset}/history?interval=h6',{
+    const res = await axios.get(`https://rest.coincap.io/v3/assets/${asset}/history?interval=h6`,{
       headers: {
        'Authorization': `Bearer ae7fca532508d4930d79ed8300b7c7d2ef02648c7ec0033a8681dc1669e88af7`
       }
     });
     return res.data;
   } catch (e) {
-    console.error('Error fetching Crypto Data: ', e)
+    console.error('Error fetching Crypto Data: ', e.response.data)
   }
 }
 
@@ -33,7 +32,7 @@ const getRates = async (asset) => {
     })
     return res.data;
   } catch (e) {
-    console.error('Error fething exchanges: ', e)
+    console.error('Error fething exchanges: ', e.response.data)
   }
 }
 
