@@ -2,6 +2,7 @@ const axios = require("axios");
 const generateRandomTweet = require("./generate");
 const BlueskyService = require("../monitor/blueSkyService");
 const fs = require("fs");
+const db = require("../config/firebase");
 const GraphemeSplitter = require("grapheme-splitter");
 require("dotenv").config();
 
@@ -55,10 +56,17 @@ function cleanTweet(content) {
 
 async function postTweet(content) {
   try {
-    fs.appendFileSync(
-      "postedTweets.txt",
-      `${new Date().toISOString()} - ${content}\n`
-    );
+    // fs.appendFileSync(
+    //   "postedTweets.txt",
+    //   `${new Date().toISOString()} - ${content}\n`
+    // );
+    // Store the posted tweet in Firebase Realtime Database
+    const tweetsRef = db.ref("postedTweets");
+    await tweetsRef.push({
+      timestamp: new Date().toISOString(),
+      content: content,
+    });
+    console.log("Tweet saved to Firebase Realtime Database");
     const blueskyService = new BlueskyService();
     // The content passed here is already grapheme-split-safe
     const result = await blueskyService.postSkeet(content);

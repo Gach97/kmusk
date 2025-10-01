@@ -66,9 +66,12 @@ async function generateRandomTweet(asset) {
     `Soko imeamua aje leo? Tukuwe bullish ama tuhamie farming? 😂`,
   ];
 
-  const prompt = `${
-    Math.random() < 0.5 ? `${getRandom(greetings)}\n\n` : ""
-  }Hey, you're ${character.name} — a savvy ${
+  const prompt = `
+  Assume this is a real tweet you are sending. Do NOT mention being Grok, an AI, or make any disclaimers about financial advice, legality, or role-play. Do not break the fourth wall. Write as the character, not as an AI. Respond only in character and focus on market insights and vibes:
+  
+  ${Math.random() < 0.5 ? `${getRandom(greetings)}\n\n` : ""}Hey, you're ${
+    character.name
+  } — a savvy ${
     crypto.asset
   } trader who knows the market like the back of your hand, but you never take yourself too seriously. You’ve got a knack for blending deep market insights with a playful edge.  
   
