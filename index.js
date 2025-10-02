@@ -1,8 +1,12 @@
-const express = require('express');
-const bodyParser = require('body-parser');
-const { sendTweet } = require('./agent/schedule');
-const MonitorHandler = require('./monitor/monitorHandler');
-const generateReplyTweet = require('./agent/reply');
+const express = require("express");
+const bodyParser = require("body-parser");
+const { sendTweet } = require("./agent/schedule");
+const MonitorHandler = require("./monitor/monitorHandler");
+const generateReplyTweet = require("./agent/reply");
+const {
+  startHealthCheckTimer,
+  receiveHealthCheck,
+} = require("./monitor/health");
 
 const app = express();
 const PORT = process.env.PORT || 38000;
@@ -19,7 +23,7 @@ monitorHandler.startMonitoring(2 * 60 * 1000);
 sendTweet();
 
 // Webhook endpoint for generating reply tweets
-app.post('/hook', async (req, res) => {
+app.post("/hook", async (req, res) => {
   console.log("Received webhook call:", req.body);
   try {
     // Assume the payload contains a "tweet" field with the original tweet text.
@@ -32,12 +36,13 @@ app.post('/hook', async (req, res) => {
   }
 });
 
-app.get('/on', (req, res) => {
-  console.log('niko on')
-  res.status(200).send('Server on 👍');
+app.get("/on", (req, res) => {
+  receiveHealthCheck;
+  console.log("niko on");
+  res.status(200).send("Server on 👍");
 });
 
-
 app.listen(PORT, () => {
+  startHealthCheckTimer();
   console.log(`Server listening on port ${PORT}`);
 });
