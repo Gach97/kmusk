@@ -18,29 +18,29 @@ class BlueskyService {
     this.postsLog = this.loadPostsLog();
   }
   
-  loadPostsLog() {
-    try {
-      if (fs.existsSync(this.postsLogPath)) {
-        const data = fs.readFileSync(this.postsLogPath, 'utf8');
-        return JSON.parse(data);
-      } else {
-        const initialLog = { posts: [] };
-        fs.writeFileSync(this.postsLogPath, JSON.stringify(initialLog, null, 2));
-        return initialLog;
-      }
-    } catch (error) {
-      console.error('Error loading Bluesky posts log:', error);
-      return { posts: [] };
-    }
-  }
+  // loadPostsLog() {
+  //   try {
+  //     if (fs.existsSync(this.postsLogPath)) {
+  //       const data = fs.readFileSync(this.postsLogPath, 'utf8');
+  //       return JSON.parse(data);
+  //     } else {
+  //       const initialLog = { posts: [] };
+  //       fs.writeFileSync(this.postsLogPath, JSON.stringify(initialLog, null, 2));
+  //       return initialLog;
+  //     }
+  //   } catch (error) {
+  //     console.error('Error loading Bluesky posts log:', error);
+  //     return { posts: [] };
+  //   }
+  // }
   
-  savePostsLog() {
-    try {
-      fs.writeFileSync(this.postsLogPath, JSON.stringify(this.postsLog, null, 2));
-    } catch (error) {
-      console.error('Error saving Bluesky posts log:', error);
-    }
-  }
+  // savePostsLog() {
+  //   try {
+  //     fs.writeFileSync(this.postsLogPath, JSON.stringify(this.postsLog, null, 2));
+  //   } catch (error) {
+  //     console.error('Error saving Bluesky posts log:', error);
+  //   }
+  // }
   
   async login(where) {
     try {
