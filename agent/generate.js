@@ -2,12 +2,36 @@ const fs = require("fs");
 const path = require("path");
 const axios = require("axios");
 const openai = require("../config/openai");
+require("dotenv").config();
 const ShengLearning = require("../learn/shengLearning");
+const LanguageUtil = require("./languageUtil");
+
 const shengLearning = new ShengLearning();
+const languageUtil = new LanguageUtil();
+const coincapKey = process.env.COINCAP_KEY;
 
 // Utility: get a random element from an array
 function getRandom(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
+}
+
+// Sanitize skeets: remove leading/trailing quotes and unwanted characters
+function sanitizeSkeet(text) {
+  if (!text) return text;
+  
+  // Remove leading/trailing quotation marks (single, double, smart quotes)
+  let sanitized = text.replace(/^["'"`]+|["'"`]+$/g, '');
+  
+  // Remove "tweet:" or "skeet:" prefixes if present (from API responses)
+  sanitized = sanitized.replace(/^(tweet|skeet):\s*/i, '');
+  
+  // Remove "notes:" section if present
+  sanitized = sanitized.split(/\nnotes:/i)[0];
+  
+  // Trim whitespace
+  sanitized = sanitized.trim();
+  
+  return sanitized;
 }
 
 const getData = async (asset) => {
@@ -16,13 +40,14 @@ const getData = async (asset) => {
       `https://rest.coincap.io/v3/assets/${asset}/history?interval=h6`,
       {
         headers: {
-          Authorization: `Bearer ae7fca532508d4930d79ed8300b7c7d2ef02648c7ec0033a8681dc1669e88af7`,
+          Authorization: `Bearer ${coincapKey}`,
         },
       }
     );
     return res.data;
   } catch (e) {
-    console.error("Error fetching Crypto Data: ", e.response.data);
+    console.error("Error fetching Crypto Data: ", e.response?.data || e.message);
+    return null;
   }
 };
 
@@ -32,13 +57,14 @@ const getRates = async (asset) => {
       `https://rest.coincap.io/v3/assets/${asset}/markets`,
       {
         headers: {
-          Authorization: `Bearer ae7fca532508d4930d79ed8300b7c7d2ef02648c7ec0033a8681dc1669e88af7`,
+          Authorization: `Bearer ${coincapKey}`,
         },
       }
     );
     return res.data;
   } catch (e) {
-    console.error("Error fething exchanges: ", e.response.data);
+    console.error("Error fetching exchanges: ", e.response?.data || e.message);
+    return null;
   }
 };
 
@@ -54,65 +80,89 @@ async function generateRandomTweet(asset) {
   const formattedTime = `${hour}:${minute < 10 ? "0" + minute : minute}`;
 
   const crypto = await getData(asset);
-
   const exchange = await getRates(asset);
-
   const postExample = getRandom(character.postExamples);
 
-  const greetings = [
-    `Niaje watu wangu, ${asset} inawapelekaje? 😂`,
-    `Wadau wa crypto, ni aje? ${asset} imeamka aje leo?`,
-    `Mbogi ya crypto, kuna mtu ame-liquidate ama tuko sawa? 😆`,
-    `Soko imeamua aje leo? Tukuwe bullish ama tuhamie farming? 😂`,
-  ];
+  // Use languageUtil to determine language preference
+  const languagePreference = languageUtil.determineLanguagePreference(
+    postExample.length,
+    !!crypto
+  );
+
+  // Get language-appropriate greetings from languageUtil
+  const appropriateGreetings = languageUtil.getGreetings(languagePreference);
+  const selectedGreeting = getRandom(appropriateGreetings);
 
   const prompt = `
   Assume this is a real tweet you are sending. Do NOT mention being Grok, an AI, or make any disclaimers about financial advice, legality, or role-play. Do not break the fourth wall. Write as the character, not as an AI. Respond only in character and focus on market insights and vibes:
   
-  ${Math.random() < 0.5 ? `${getRandom(greetings)}\n\n` : ""}Hey, you're ${
+  ${Math.random() < 0.5 ? `${selectedGreeting}\n\n` : ""}You're ${
     character.name
-  } — a savvy ${
-    crypto.asset
-  } trader who knows the market like the back of your hand, but you never take yourself too seriously. You’ve got a knack for blending deep market insights with a playful edge.  
+  } — a skilled crypto trader who analyzes the market like the back of your hand.
   
-Your story? You came from humble beginnings (you rarely mention it, but it's your secret sauce), and your bio says it all: ${getRandom(
-    character.bio
-  )} and ${getRandom(
-    character.bio
-  )}. Plus, your lore is packed with wild tales like: ${getRandom(
-    character.lore
-  )}. And just for kicks, here’s a fun tidbit about you: secretly rich.  
+Your story: ${getRandom(character.bio)}. Lore: ${getRandom(character.lore)}.
 
-Today’s vibe is ${dayName} at ${formattedTime}. Here's the lowdown on the market:  
-- ${asset} price: $${crypto.priceUsd}  
-- Data recorded on: ${crypto.date}
+Market vibe: ${dayName} at ${formattedTime}. ${asset} is the focus. Craft a witty, sharp post under 200 chars.
 
-Now, with your signature style ("${getRandom(
-    character.style.post
-  )}"), craft a tweet that's witty, chill, and totally offbeat—make sure to keep it under 200 graphemes, but don't mention it much. Mix things up:  
-- Hint at whether it's a good time to go long or short.  
-- Optionally mention a holding period (3-24 hours) if it feels right.  
-- Drop some numbers by referencing funding rates, liquidity, or recent price action (precision is key).  
-- Give a shout-out to some hotspots (name 'em and tease potential profits) where ${asset} can be scooped up cheap and flipped for gains according to these rates: ${exchange}  
-- Above all, be sharp, a little irreverent, and unmistakably you.
-- Assume it is a real tweet you are sending, so restrain from mentioning anything that might break the 4th wall
+Now craft a tweet in your signature style—sharp, witty, groun
 
-For a little inspo, here’s an example: "${postExample}"—and don’t forget to throw in a #${asset}!`;
+    // Sanitize the tweet before any further processing
+    tweet = sanitizeSkeet(tweet);ded. Reference market signals. Keep it authentic.
+
+Example: "${postExample}"
+
+Go.`;
 
   try {
     const completion = await openai.chat.completions.create({
       model: "meta-llama/llama-3.3-70b-instruct:free",
       messages: [{ role: "user", content: prompt }],
     });
-    let tweet = completion.choices[0].message.content.trim();
-    const shengLevel = Math.random() > 0.5 ? "moderate" : "light";
-    tweet = await shengLearning.enhanceTweetWithSheng(tweet, shengLevel);
 
-    await shengLearning.extractPotentialShengWords(tweet);
+    // Add safety check for completion response
+    if (!completion?.choices?.[0]?.message?.content) {
+      console.error("Invalid API response:", completion);
+      const fallback = getRandom(character.postExamples);
+      return fallback;
+    }
+
+    let tweet = completion.choices[0].message.content.trim();
+
+    // Only attempt Sheng enhancement if language preference is "sheng"
+    if (languagePreference === "sheng") {
+      // Assess confidence before enhancing
+      const confidence = languageUtil.assessLanguageConfidence(tweet, languagePreference);
+
+      // Only enhance if confidence is medium or high
+      if (confidence !== "low" && Math.random() > 0.3) {
+        try {
+          const shengLevel = confidence === "high" ? "moderate" : "light";
+          const enhancedTweet = await shengLearning.enhanceTweetWithSheng(tweet, shengLevel);
+
+          // Validate the enhanced version
+          if (
+            enhancedTweet &&
+            languageUtil.validateContentForLanguage(enhancedTweet, languagePreference)
+          ) {
+            tweet = enhancedTweet;
+            await shengLearning.extractPotentialShengWords(tweet);
+          }
+        } catch (shengError) {
+          console.log("Sheng enhancement failed, using English version as fallback");
+          // Falls back to original English tweet automatically
+        }
+      }
+    }
+
+    // Final sanitization before returning
+    tweet = sanitizeSkeet(tweet);
     return tweet;
   } catch (error) {
     console.error("Error generating random tweet:", error);
-    throw error;
+    // Fallback to character example if API fails
+    const fallback = getRandom(character.postExamples);
+    console.log("Using fallback post example:", fallback);
+    return sanitizeSkeet(fallback);
   }
 }
 
