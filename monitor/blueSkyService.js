@@ -15,7 +15,7 @@ class BlueskyService {
     
     // Track posts we've made
     this.postsLogPath = path.join(__dirname, 'bluesky_posts_log.json');
-    this.postsLog = this.loadPostsLog();
+    // this.postsLog = this.loadPostsLog();
   }
   
   // loadPostsLog() {
@@ -94,7 +94,7 @@ class BlueskyService {
         this.postsLog.posts = this.postsLog.posts.slice(-100);
       }
       
-      this.savePostsLog();
+      // this.savePostsLog();
       
       return {
         success: true,
