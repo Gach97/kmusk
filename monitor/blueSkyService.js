@@ -80,19 +80,19 @@ class BlueskyService {
       const response = await this.agent.post(postParams);
       
       // Log the post
-      this.postsLog.posts.push({
-        cid: response.cid,
-        uri: response.uri,
-        text: text,
-        timestamp: new Date().toISOString(),
-        isReply: !!options.replyTo,
-        replyTo: options.replyTo || null
-      });
+      // this.postsLog.posts.push({
+      //   cid: response.cid,
+      //   uri: response.uri,
+      //   text: text,
+      //   timestamp: new Date().toISOString(),
+      //   isReply: !!options.replyTo,
+      //   replyTo: options.replyTo || null
+      // });
       
       // Keep log size reasonable
-      if (this.postsLog.posts.length > 100) {
-        this.postsLog.posts = this.postsLog.posts.slice(-100);
-      }
+      // if (this.postsLog.posts.length > 100) {
+      //   this.postsLog.posts = this.postsLog.posts.slice(-100);
+      // }
       
       // this.savePostsLog();
       
