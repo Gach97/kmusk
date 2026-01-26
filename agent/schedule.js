@@ -70,7 +70,7 @@ async function postTweet(content) {
     const blueskyService = new BlueskyService();
     // The content passed here is already grapheme-split-safe
     const result = await blueskyService.postSkeet(content);
-    console.log(`Tweet posted: ${result}`);
+    console.log(`Tweet posted: `, { Result: result });
   } catch (e) {
     console.error("Error posting tweet: ", e);
   }
