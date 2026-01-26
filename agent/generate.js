@@ -101,7 +101,7 @@ For a little inspo, here’s an example: "${postExample}"—and don’t forget t
 
   try {
     const completion = await openai.chat.completions.create({
-      model: "x-ai/grok-4-fast:free",
+      model: "deepseek/deepseek-r1-0528:free",
       messages: [{ role: "user", content: prompt }],
     });
     let tweet = completion.choices[0].message.content.trim();
