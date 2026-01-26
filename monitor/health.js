@@ -1,47 +1,60 @@
-const axios = require("axios");
-require("dotenv").config();
+const axios = require('axios');
+require('dotenv').config();
 
 const PARTNER_URL = `${process.env.PARTNER}`;
 const PARTNER_URL1 = `${process.env.PARTNER1}`;
+const PARTNER_URL2 = `${process.env.PARTNER2}`;
 
 // Function to send health check request
 const sendHealthCheck = async () => {
   try {
+    console.log('Sending health check to partner servers...');
+    console.log({PARTNER_URL, PARTNER_URL1});
     const response = await axios.get(`${PARTNER_URL}/on`);
-    await axios.get(`${PARTNER_URL1}/`);
-    console.log("Health check sent to partner server:", response.data);
+    const response1 = await axios.get(`${PARTNER_URL1}/`);
+    const response2 = await axios.get(`${PARTNER_URL2}/`);
+    console.log('Health check sent to partner server:', response.data);
+    console.log('Health check sent to partner server:', response1.data);
+    console.log('Health check sent to partner server:', response2.data);
   } catch (error) {
-    console.error("Failed to send health check:", error.message);
+    console.error('Failed to send health check:', error.message);
   }
 };
 
 function getRandomInterval() {
-  // Random time between 2 and 3 hours in milliseconds
-  return Math.floor(Math.random() * (10800000 - 7200000 + 1)) + 7200000;
-}
+  // Random time between 1 and 3 minutes in milliseconds
+  return Math.floor(Math.random() * (180000 - 60000 + 1)) + 60000;
+};
 
 // Start the timer to send requests randomly
 const startHealthCheckTimer = () => {
   // Send first check immediately
   sendHealthCheck();
-
-  // Then send randomly
-  setInterval(sendHealthCheck, getRandomInterval);
+  
+  // Then send with random intervals using recursive setTimeout
+  const scheduleNextCheck = () => {
+    setTimeout(() => {
+      sendHealthCheck();
+      scheduleNextCheck(); // Schedule the next check with a new random interval
+    }, getRandomInterval());
+  };
+  
+  scheduleNextCheck();
 };
 
 // Handle incoming health check
 const receiveHealthCheck = (req, res) => {
   const timestamp = new Date().toISOString();
   console.log(`Health check received at ${timestamp}`);
-
-  res.status(200).json({
-    status: "active",
-    server: "eventkick",
-    timestamp,
+  
+  res.json({
+    status: 'active',
+    server: 'health',
+    timestamp
   });
 };
 
 module.exports = {
   startHealthCheckTimer,
-  receiveHealthCheck,
+  receiveHealthCheck
 };
