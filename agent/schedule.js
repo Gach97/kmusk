@@ -103,7 +103,6 @@ function scheduleNextTweet() {
 
   setTimeout(async () => {
     await sendTweet();
-    scheduleNextTweet();
   }, delay);
 }
 
