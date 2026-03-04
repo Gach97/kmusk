@@ -44,7 +44,7 @@ notes: 'Any additional notes here'
 
   try {
     const completion = await openai.chat.completions.create({
-      model: "deepseek/deepseek-chat-v3-0324:free",
+      model: process.env.OPEN_MODEL || "deepseek/deepseek-chat-v3-0324:free",
       messages: [{ role: "user", content: prompt }]
     });
     const replyTweet = completion.choices[0].message.content.trim();

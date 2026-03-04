@@ -91,7 +91,22 @@ notes: 'Any additional notes here'
         messages: [{ role: "user", content: prompt }],
       });
 
-      const enhancedTweet = completion.choices[0].message.content.trim();
+      const enhancedResponse = completion.choices[0].message.content.trim();
+
+      // More robust extraction - handle variations in AI response format
+      let tweet = "";
+      if (enhancedResponse.toLowerCase().includes("tweet:")) {
+        // Splits at 'tweet:', takes the second half, then splits at 'notes:' to remove notes
+        tweet = enhancedResponse.split(/tweet:\s*/i)[1].split(/notes:\s*/i)[0];
+      } else {
+        // If the AI ignored the format and just gave the text
+        tweet = enhancedResponse;
+      }
+
+      // Final cleanup: Remove quotes, backticks, and extra whitespace
+      tweet = tweet.replace(/^['\"`]+|['\"`]+$/g, '').trim();
+
+      console.log("Cleaned Enhanced Post:", tweet);
 
       const tweetMatch = enhancedTweet.match(/tweet:\s*'([^']*)'/);
       const tweet = tweetMatch ? tweetMatch[1].trim() : "";

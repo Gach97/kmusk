@@ -95,9 +95,10 @@ async function sendTweet() {
 }
 
 function scheduleNextTweet() {
-  const twoHoursMs = 2 * 60 * 60 * 1000;
+  // 3-4 hours between tweets to reduce rate limiting pressure
+  const threeHoursMs = 3 * 60 * 60 * 1000;
   const additionalHourMs = Math.random() * (60 * 60 * 1000);
-  const delay = twoHoursMs + additionalHourMs;
+  const delay = threeHoursMs + additionalHourMs;
 
   console.log(`Next tweet scheduled in ${(delay / 60000).toFixed(2)} minutes`);
 

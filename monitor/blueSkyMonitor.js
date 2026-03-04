@@ -12,6 +12,22 @@ class BlueskyMonitor {
       password: process.env.BLUESKY_PASSWORD || config.password
     };
     
+    // Validate that identifier is provided
+    if (!this.credentials.identifier) {
+      throw new Error(
+        'Missing BLUESKY_IDENTIFIER environment variable. ' +
+        'Please set BLUESKY_IDENTIFIER in your .env file (e.g., your Bluesky handle without @)'
+      );
+    }
+    
+    // Validate that password is provided
+    if (!this.credentials.password) {
+      throw new Error(
+        'Missing BLUESKY_PASSWORD environment variable. ' +
+        'Please set BLUESKY_PASSWORD in your .env file'
+      );
+    }
+    
     this.handle = this.credentials.identifier;
     if (this.handle.includes('@')) {
       this.handle = this.handle.split('@')[0];
