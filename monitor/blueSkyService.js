@@ -13,6 +13,22 @@ class BlueskyService {
       password: process.env.BLUESKY_PASSWORD || config.password
     };
     
+    // Validate that identifier is provided
+    if (!this.credentials.identifier) {
+      throw new Error(
+        'Missing BLUESKY_IDENTIFIER environment variable. ' +
+        'Please set BLUESKY_IDENTIFIER in your .env file (e.g., your Bluesky handle without @)'
+      );
+    }
+    
+    // Validate that password is provided
+    if (!this.credentials.password) {
+      throw new Error(
+        'Missing BLUESKY_PASSWORD environment variable. ' +
+        'Please set BLUESKY_PASSWORD in your .env file'
+      );
+    }
+    
     // Track posts we've made
     this.postsLogPath = path.join(__dirname, 'bluesky_posts_log.json');
     // this.postsLog = this.loadPostsLog();

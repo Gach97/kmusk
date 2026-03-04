@@ -74,6 +74,8 @@ Rewrite the tweet below using Kenyan Sheng to reflect authentic Kenyan Bluesky c
         levelDescription[shengLevel]
       } Ensure the revised tweet is natural, under 200 graphemes, and suitable for posting without additional explanations or bonus texts. Incorporate emojis where appropriate.
 
+CRITICAL: When rewriting in Sheng, ensure the technical data (Symbol, Price, and Trend) remains accurate and visible. The slang should enhance the 'vibe,' not hide the facts.
+
 Sheng examples: ${shengExamples.join(
         ", "
       )}. Feel free to include one additional Sheng word for extra flavor.
@@ -91,17 +93,26 @@ notes: 'Any additional notes here'
         messages: [{ role: "user", content: prompt }],
       });
 
-      const enhancedTweet = completion.choices[0].message.content.trim();
+      const enhancedResponse = completion.choices[0].message.content.trim();
 
-      const tweetMatch = enhancedTweet.match(/tweet:\s*'([^']*)'/);
-      const tweet = tweetMatch ? tweetMatch[1].trim() : "";
-      console.log(tweet);
+      // More robust extraction - handle variations in AI response format
+      let tweet = "";
+      if (enhancedResponse.toLowerCase().includes("tweet:")) {
+        // Splits at 'tweet:', takes the second half, then splits at 'notes:' to remove notes
+        tweet = enhancedResponse.split(/tweet:\s*/i)[1].split(/notes:\s*/i)[0];
+      } else {
+        // If the AI ignored the format and just gave the text
+        tweet = enhancedResponse;
+      }
 
-      console.log("enhanced skeet: ", tweet);
+      // Final cleanup: Remove quotes, backticks, and extra whitespace
+      tweet = tweet.replace(/^['\"`]+|['\"`]+$/g, '').trim();
 
-      await this.extractPotentialShengWords(enhancedTweet);
+      console.log("Cleaned Enhanced Post:", tweet);
 
-      return tweet;
+      await this.extractPotentialShengWords(enhancedResponse);
+
+      return tweet || originalTweet; // Fallback to original if something goes wrong
     } catch (error) {
       console.error("Error enhancing tweet with Sheng:", error);
       return originalTweet;
