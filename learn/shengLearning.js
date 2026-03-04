@@ -21,7 +21,7 @@ Text: "${text}"
       `;
 
       const completion = await openai.chat.completions.create({
-        model: "x-ai/grok-4-fast:free",
+        model: process.env.OPEN_MODEL || "x-ai/grok-4-fast:free",
         messages: [{ role: "user", content: prompt }],
         response_format: { type: "json_object" },
       });
@@ -89,7 +89,7 @@ notes: 'Any additional notes here'
 `;
 
       const completion = await openai.chat.completions.create({
-        model: "meta-llama/llama-3.3-70b-instruct:free",
+        model: process.env.OPEN_MODEL || "meta-llama/llama-3.3-70b-instruct:free",
         messages: [{ role: "user", content: prompt }],
       });
 

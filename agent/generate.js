@@ -138,8 +138,8 @@ async function generateRandomTweet(asset) {
     let completion;
     let retries = 0;
     const maxRetries = 2;
-    const primaryModel = "qwen/qwen3-next-80b-a3b-instruct:free";
-    const backupModel = "mistralai/mistral-tiny:free";
+    const primaryModel = process.env.OPEN_MODEL || "qwen/qwen3-next-80b-a3b-instruct:free";
+    const backupModel = process.env.OPEN_MODEL_BACKUP || "mistralai/mistral-tiny:free";
     
     // Try primary model first
     while (retries < maxRetries) {
