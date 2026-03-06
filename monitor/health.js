@@ -8,25 +8,14 @@ const PARTNER_URL2 = `${process.env.PARTNER2}`;
 // Function to send health check request
 const sendHealthCheck = async () => {
   try {
-    // Skip health check if partner URLs not configured
-    if (!process.env.PARTNER && !process.env.PARTNER1 && !process.env.PARTNER2) {
-      return;
-    }
-    
-    if (PARTNER_URL && PARTNER_URL !== 'undefined') {
-      const response = await axios.get(`${PARTNER_URL}/on`);
-      console.log('Health check sent to partner server:', response.data);
-    }
-    
-    if (PARTNER_URL1 && PARTNER_URL1 !== 'undefined') {
-      const response1 = await axios.get(`${PARTNER_URL1}/`);
-      console.log('Health check sent to partner server:', response1.data);
-    }
-    
-    if (PARTNER_URL2 && PARTNER_URL2 !== 'undefined') {
-      const response2 = await axios.get(`${PARTNER_URL2}/`);
-      console.log('Health check sent to partner server:', response2.data);
-    }
+    console.log('Sending health check to partner servers...');
+    console.log({PARTNER_URL, PARTNER_URL1});
+    const response = await axios.get(`${PARTNER_URL}/on`);
+    const response1 = await axios.get(`${PARTNER_URL1}/`);
+    const response2 = await axios.get(`${PARTNER_URL2}/`);
+    console.log('Health check sent to partner server:', response.data);
+    console.log('Health check sent to partner server:', response1.data);
+    console.log('Health check sent to partner server:', response2.data);
   } catch (error) {
     console.error('Failed to send health check:', error.message);
   }
