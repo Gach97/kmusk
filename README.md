@@ -18,7 +18,7 @@ Inspired by the “KenyanMusk” persona, the bot:
 
 - **Market Analysis**: Automated fetching, parsing, and analysis of crypto asset data, including funding rates, support zones, and liquidity pools.
 - **Natural Language Generation**: Uses OpenAI and Grok models to generate tweets and replies, following a template for KenyanMusk’s persona.
-- **Sheng/Swahili Integration**: Identifies and enhances tweets with Sheng slang and Swahili phrases, using a growing dictionary.
+- **Sheng/Swahili Integration**: Identifies and enhances tweets with Sheng slang and also optionally mixes in Swahili phrases. The system no longer forces full translations; light or moderate Swahili is used so posts remain coherent.
 - **Reply Automation**: Monitors platforms (e.g., Bluesky), learns from user replies, and posts responses in real time.
 - **Character Customization**: Reads persona traits from `char.json` to maintain consistent tone and style.
 

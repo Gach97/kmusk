@@ -81,7 +81,14 @@ async function sendTweet() {
     const asset = await fetchAsset();
     if (!asset) return;
 
-    let tweet = await generateRandomTweet(asset);
+    // allow overriding the prompt via env for testing
+    const override = process.env.TEST_PROMPT || null;
+    let tweet = await generateRandomTweet(asset, override);
+    if (!tweet) {
+      console.log("Tweet generation failed or returned no content; skipping post.");
+      scheduleNextTweet();
+      return;
+    }
     tweet = cleanTweet(tweet); // Truncation happens here
     console.log(
       `Tweet generated at ${new Date().toLocaleTimeString()}: ${tweet}`

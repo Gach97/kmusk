@@ -4,9 +4,11 @@ const axios = require("axios");
 const openai = require("../config/openai");
 require("dotenv").config();
 const ShengLearning = require("../learn/shengLearning");
+const SwahiliLearning = require("../learn/swahiliLearning");
 const LanguageUtil = require("./languageUtil");
 
 const shengLearning = new ShengLearning();
+const swahiliLearning = new SwahiliLearning();
 const languageUtil = new LanguageUtil();
 const coincapKey = process.env.COINCAP_KEY;
 
@@ -68,7 +70,8 @@ const getRates = async (asset) => {
   }
 };
 
-async function generateRandomTweet(asset) {
+async function generateRandomTweet(asset, overridePrompt = null) {
+  console.log({baseURL: `${process.env.AI_URL}`, apiKey: `${process.env.AI_API}`});
   const charFilePath = path.join(__dirname, "char.json");
   const charData = fs.readFileSync(charFilePath, "utf8");
   const character = JSON.parse(charData);
@@ -121,49 +124,74 @@ Go.`;
 
     // Add safety check for completion response
     if (!completion?.choices?.[0]?.message?.content) {
-      console.error("Invalid API response:", completion);
-      const fallback = getRandom(character.postExamples);
-      return fallback;
+      console.error("Invalid API response (no content):", completion);
+      console.error("Choices[0] details:", completion?.choices?.[0]);
+      console.error("Message object details:", completion?.choices?.[0]?.message);
+      // Do not return a random example; indicate failure so caller can skip posting.
+      return null;
     }
 
     let tweet = completion.choices[0].message.content.trim();
+    console.log("Raw tweet content from API:", JSON.stringify(tweet));
 
-    // Only attempt Sheng enhancement if language preference is "sheng"
-    if (languagePreference === "sheng") {
+    // Language-specific enhancements: sheng or swahili
+    if (languagePreference === "sheng" || languagePreference === "swahili") {
       // Assess confidence before enhancing
       const confidence = languageUtil.assessLanguageConfidence(tweet, languagePreference);
 
       // Only enhance if confidence is medium or high
       if (confidence !== "low" && Math.random() > 0.3) {
         try {
-          const shengLevel = confidence === "high" ? "moderate" : "light";
-          const enhancedTweet = await shengLearning.enhanceTweetWithSheng(tweet, shengLevel);
+          const level = confidence === "high" ? "moderate" : "light";
+          if (languagePreference === "sheng") {
+            const enhancedTweet = await shengLearning.enhanceTweetWithSheng(tweet, level);
 
-          // Validate the enhanced version
-          if (
-            enhancedTweet &&
-            languageUtil.validateContentForLanguage(enhancedTweet, languagePreference)
-          ) {
-            tweet = enhancedTweet;
-            await shengLearning.extractPotentialShengWords(tweet);
+            if (
+              enhancedTweet &&
+              languageUtil.validateContentForLanguage(enhancedTweet, languagePreference)
+            ) {
+              tweet = enhancedTweet;
+              await shengLearning.extractPotentialShengWords(tweet);
+            }
+          } else {
+            // swahili path
+            const enhancedTweet = await swahiliLearning.enhanceTweetWithSwahili(tweet, level);
+
+            if (
+              enhancedTweet &&
+              languageUtil.validateContentForLanguage(enhancedTweet, languagePreference)
+            ) {
+              tweet = enhancedTweet;
+            }
           }
-        } catch (shengError) {
-          console.log("Sheng enhancement failed, using English version as fallback");
-          // Falls back to original English tweet automatically
+        } catch (langError) {
+          console.log(`${languagePreference} enhancement failed, using English version as fallback`);
+          // fallback automatically
         }
       }
     }
 
     // Final sanitization before returning
     tweet = sanitizeSkeet(tweet);
+    console.log("Final sanitized tweet: ", tweet);
     return tweet;
   } catch (error) {
     console.error("Error generating random tweet:", error);
-    // Fallback to character example if API fails
-    const fallback = getRandom(character.postExamples);
-    console.log("Using fallback post example:", fallback);
-    return sanitizeSkeet(fallback);
+    // In case of any failure, do not produce a fallback post. Return null so
+    // caller can decide to skip posting rather than send something random.
+    return null;
   }
 }
+
+// allow running this file directly for a quick generation test
+if (require.main === module) {
+  (async () => {
+    console.log("Running standalone test of generateRandomTweet...");
+    const result = await generateRandomTweet("bitcoin", "TEST PROMPT: Write a brief market insight as if you were a seasoned trader.");
+    console.log("Standalone test result:", result);
+  })();
+}
+
+module.exports = { generateRandomTweet };
 
 module.exports = generateRandomTweet;

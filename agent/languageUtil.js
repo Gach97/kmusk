@@ -25,10 +25,14 @@ class LanguageUtil {
       return 'english';
     }
 
-    // Randomly decide between sheng enhancement and english
-    // with 40% chance for sheng, 60% for english
-    const shouldUseSheng = Math.random() < 0.4;
-    return shouldUseSheng ? 'sheng' : 'english';
+    // Randomly decide among english, swahili, and sheng.
+    // - ~40% english (clear market-focused posts)
+    // - ~30% swahili (mix of english and Swahili phrases)
+    // - ~30% sheng (full Kenyan slang rewrite)
+    const roll = Math.random();
+    if (roll < 0.3) return 'swahili';
+    if (roll < 0.6) return 'sheng';
+    return 'english';
   }
 
   /**
@@ -174,15 +178,16 @@ class LanguageUtil {
    * Returns 'high', 'medium', or 'low'
    */
   assessLanguageConfidence(text, language) {
+    // English is always safe
     if (language === 'english') return 'high';
 
-    // Short texts have lower confidence for sheng
+    // Short texts have lower confidence for non‑English enhancements
     if (text.length < 50) return 'low';
 
     // Medium-length texts have medium confidence
     if (text.length < 150) return 'medium';
 
-    // Longer texts can handle sheng better
+    // Longer texts can handle either Swahili or Sheng more naturally
     return 'high';
   }
 }
