@@ -13,9 +13,6 @@ const sendHealthCheck = async () => {
       return;
     }
     
-    console.log('Sending health check to partner servers...');
-    console.log({PARTNER_URL, PARTNER_URL1});
-    
     if (PARTNER_URL && PARTNER_URL !== 'undefined') {
       const response = await axios.get(`${PARTNER_URL}/on`);
       console.log('Health check sent to partner server:', response.data);

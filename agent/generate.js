@@ -71,7 +71,6 @@ const getRates = async (asset) => {
 };
 
 async function generateRandomTweet(asset, overridePrompt = null) {
-  console.log({baseURL: `${process.env.AI_URL}`, apiKey: `${process.env.AI_API}`});
   const charFilePath = path.join(__dirname, "char.json");
   const charData = fs.readFileSync(charFilePath, "utf8");
   const character = JSON.parse(charData);
@@ -137,7 +136,6 @@ async function generateRandomTweet(asset, overridePrompt = null) {
 
   OUTPUT (Post Text Only):`;
   const prompt = overridePrompt || defaultPrompt;
-  console.log("Prompt being sent to model:\n", prompt);
 
   try {
     let completion;
@@ -157,19 +155,15 @@ async function generateRandomTweet(asset, overridePrompt = null) {
           presence_penalty: 1.0,
           max_tokens: 250,
         });
-        console.log(`Generated tweet using ${primaryModel}`);
-        console.log("API completion response:", completion);
         break;
       } catch (error) {
         if (error.status === 429 && retries < maxRetries - 1) {
           // Rate limited, exponential backoff
-          const delay = Math.pow(2, retries) * 8000; // 8s, 16s
-          console.log(`${primaryModel} rate limited (429). Retrying in ${delay}ms (attempt ${retries + 1}/${maxRetries})`);
+          const delay = Math.pow(2, retries) * 8000;
           await new Promise(resolve => setTimeout(resolve, delay));
           retries++;
         } else if (error.status === 429) {
           // Primary model exhausted, try backup
-          console.log(`${primaryModel} rate limited. Switching to backup model: ${backupModel}`);
           try {
             completion = await openai.chat.completions.create({
               model: backupModel,
@@ -201,7 +195,6 @@ async function generateRandomTweet(asset, overridePrompt = null) {
     }
 
     let tweet = completion.choices[0].message.content.trim();
-    console.log("Raw tweet content from API:", JSON.stringify(tweet));
 
     // Language-specific enhancements: sheng or swahili
     if (languagePreference === "sheng" || languagePreference === "swahili") {
@@ -253,13 +246,13 @@ async function generateRandomTweet(asset, overridePrompt = null) {
 }
 
 // allow running this file directly for a quick generation test
-if (require.main === module) {
-  (async () => {
-    console.log("Running standalone test of generateRandomTweet...");
-    const result = await generateRandomTweet("bitcoin", "TEST PROMPT: Write a brief market insight as if you were a seasoned trader.");
-    console.log("Standalone test result:", result);
-  })();
-}
+// if (require.main === module) {
+//   (async () => {
+//     console.log("Running standalone test of generateRandomTweet...");
+//     const result = await generateRandomTweet("bitcoin", "TEST PROMPT: Write a brief market insight as if you were a seasoned trader.");
+//     console.log("Standalone test result:", result);
+//   })();
+// }
 
 module.exports = { generateRandomTweet };
 
