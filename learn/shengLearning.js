@@ -21,7 +21,7 @@ Text: "${text}"
       `;
 
       const completion = await openai.chat.completions.create({
-        model: process.env.OPEN_MODEL || "x-ai/grok-4-fast:free",
+        model: "x-ai/grok-4-fast:free",
         messages: [{ role: "user", content: prompt }],
         response_format: { type: "json_object" },
       });
@@ -74,8 +74,6 @@ Rewrite the tweet below using Kenyan Sheng to reflect authentic Kenyan Bluesky c
         levelDescription[shengLevel]
       } Ensure the revised tweet is natural, under 200 graphemes, and suitable for posting without additional explanations or bonus texts. Incorporate emojis where appropriate.
 
-CRITICAL: When rewriting in Sheng, ensure the technical data (Symbol, Price, and Trend) remains accurate and visible. The slang should enhance the 'vibe,' not hide the facts.
-
 Sheng examples: ${shengExamples.join(
         ", "
       )}. Feel free to include one additional Sheng word for extra flavor.
@@ -89,7 +87,7 @@ notes: 'Any additional notes here'
 `;
 
       const completion = await openai.chat.completions.create({
-        model: process.env.OPEN_MODEL || "meta-llama/llama-3.3-70b-instruct:free",
+        model: "meta-llama/llama-3.3-70b-instruct:free",
         messages: [{ role: "user", content: prompt }],
       });
 
@@ -110,9 +108,15 @@ notes: 'Any additional notes here'
 
       console.log("Cleaned Enhanced Post:", extractedTweet);
 
-      await this.extractPotentialShengWords(enhancedResponse);
+      const tweetMatch = enhancedTweet.match(/tweet:\s*'([^']*)'/);
+      const tweet = tweetMatch ? tweetMatch[1].trim() : "";
+      console.log(tweet);
 
-      return extractedTweet || originalTweet; // Fallback to original if something goes wrong
+      console.log("enhanced skeet: ", tweet);
+
+      await this.extractPotentialShengWords(enhancedTweet);
+
+      return tweet;
     } catch (error) {
       console.error("Error enhancing tweet with Sheng:", error);
       return originalTweet;

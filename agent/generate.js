@@ -92,104 +92,35 @@ async function generateRandomTweet(asset, overridePrompt = null) {
     !!crypto
   );
 
-  // --- ENHANCED DATA EXTRACTION WITH MEANINGFUL METRICS ---
-  const history = crypto?.data || [];
-  const currentData = history[history.length - 1];
-  const previousData = history[history.length - 2];
+  // Get language-appropriate greetings from languageUtil
+  const appropriateGreetings = languageUtil.getGreetings(languagePreference);
+  const selectedGreeting = getRandom(appropriateGreetings);
 
-  const price = currentData?.priceUsd ? parseFloat(currentData.priceUsd) : 0;
-  const priceFormatted = price > 1 
-    ? price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-    : price.toFixed(6);
-
-  // Calculate short-term trend from historical data
-  const trend = price > (previousData?.priceUsd || 0) ? "UPWARD" : "DOWNWARD";
-  const exchangeName = exchange?.data?.[0]?.exchangeId || "Global Markets";
-  const volume = exchange?.data?.[0]?.volumeUsd24Hr 
-    ? (parseFloat(exchange.data[0].volumeUsd24Hr) / 1000000).toFixed(2) + "M"
-    : "Significant";
-
-  const selectedMood = getRandom(character.moods);
-
-  // --- THE "ELITE TRADER" ANALYSIS PROMPT ---
-  const defaultPrompt = `
-  SYSTEM: You are ${character.name}, a professional Crypto Strategist. 
-  Your mission is to provide high-signal market analysis for ${asset.toUpperCase()}.
+  const prompt = `
+  Assume this is a real tweet you are sending. Do NOT mention being Grok, an AI, or make any disclaimers about financial advice, legality, or role-play. Do not break the fourth wall. Write as the character, not as an AI. Respond only in character and focus on market insights and vibes:
   
-  CURRENT MARKET FEED:
-  - Symbol: #${asset.toUpperCase()}
-  - Spot Price: $${priceFormatted}
-  - 6H Trend: ${trend}
-  - Exchange Activity: ${exchangeName}
-  - 24H Volume: $${volume}
-  - Character Mood: ${selectedMood}
-  - Background Context: ${getRandom(character.lore)}
+  ${Math.random() < 0.5 ? `${selectedGreeting}\n\n` : ""}You're ${
+    character.name
+  } — a skilled crypto trader who analyzes the market like the back of your hand.
+  
+Your story: ${getRandom(character.bio)}. Lore: ${getRandom(character.lore)}.
 
-  POST REQUIREMENTS:
-  1. DATA INTEGRITY: You MUST include the Symbol (#${asset.toUpperCase()}) and the current Price ($${priceFormatted}).
-  2. ANALYTICAL INSIGHT: Don't just list numbers. Interpret them. (e.g., "Volume is drying up at resistance" or "Strong support holding at this level").
-  3. CHARACTER: Blend technical analysis (Order blocks, RSI, or Liquidity) with your Eldoret "street-smart" wisdom. 
-  4. TRADER UTILITY: Help traders understand if this is a "Look-and-wait" moment or an "Accumulation" zone.
-  5. BREVITY: Keep it under 280 characters for Bluesky.
-  6. ANTI-REPETITION: Use a unique opening. Do NOT start with "The market is..." or "Looking at...". Start with a punchy observation.
+Market vibe: ${dayName} at ${formattedTime}. ${asset} is the focus. Craft a witty, sharp post under 200 chars.
 
-  STYLE EXAMPLE: "${postExample}"
+Now craft a tweet in your signature style—sharp, witty, groun
 
-  OUTPUT (Post Text Only):`;
-  const prompt = overridePrompt || defaultPrompt;
-  console.log("Prompt being sent to model:\n", prompt);
+    // Sanitize the tweet before any further processing
+    tweet = sanitizeSkeet(tweet);ded. Reference market signals. Keep it authentic.
+
+Example: "${postExample}"
+
+Go.`;
 
   try {
-    let completion;
-    let retries = 0;
-    const maxRetries = 2;
-    const primaryModel = process.env.OPEN_MODEL;
-    const backupModel = process.env.OPEN_MODEL_BACKUP;
-    
-    // Try primary model first
-    while (retries < maxRetries) {
-      try {
-        completion = await openai.chat.completions.create({
-          model: primaryModel,
-          messages: [{ role: "user", content: prompt }],
-          temperature: 0.9,
-          frequency_penalty: 1.5,
-          presence_penalty: 1.0,
-          max_tokens: 250,
-        });
-        console.log(`Generated tweet using ${primaryModel}`);
-        console.log("API completion response:", completion);
-        break;
-      } catch (error) {
-        if (error.status === 429 && retries < maxRetries - 1) {
-          // Rate limited, exponential backoff
-          const delay = Math.pow(2, retries) * 8000; // 8s, 16s
-          console.log(`${primaryModel} rate limited (429). Retrying in ${delay}ms (attempt ${retries + 1}/${maxRetries})`);
-          await new Promise(resolve => setTimeout(resolve, delay));
-          retries++;
-        } else if (error.status === 429) {
-          // Primary model exhausted, try backup
-          console.log(`${primaryModel} rate limited. Switching to backup model: ${backupModel}`);
-          try {
-            completion = await openai.chat.completions.create({
-              model: backupModel,
-              messages: [{ role: "user", content: prompt }],
-              temperature: 0.85,
-              frequency_penalty: 1.3,
-              presence_penalty: 0.9,
-              max_tokens: 250,
-            });
-            console.log(`Generated tweet using backup model ${backupModel}`);
-            break;
-          } catch (backupError) {
-            console.log(`Backup model also failed: ${backupError.message}`);
-            throw error; // Throw original error, will fall back to examples
-          }
-        } else {
-          throw error;
-        }
-      }
-    }
+    const completion = await openai.chat.completions.create({
+      model: "meta-llama/llama-3.3-70b-instruct:free",
+      messages: [{ role: "user", content: prompt }],
+    });
 
     // Add safety check for completion response
     if (!completion?.choices?.[0]?.message?.content) {
